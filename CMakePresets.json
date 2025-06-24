@@ -79,7 +79,8 @@
         "CMAKE_C_COMPILER": "cl",
         "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_BUILD_TYPE": "Debug",
-        "DEVELOPER_MODE": "ON"
+        "DEVELOPER_MODE": "ON",
+        "VCPKG_MANIFEST_FEATURES": "test"
       }
     },
     {
@@ -91,7 +92,8 @@
         "CMAKE_C_COMPILER": "cl",
         "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "DEVELOPER_MODE": "ON"
+        "DEVELOPER_MODE": "ON",
+        "VCPKG_MANIFEST_FEATURES": "test"
       }
     },
     {
@@ -161,7 +163,8 @@
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl",
         "CMAKE_BUILD_TYPE": "Debug",
-        "DEVELOPER_MODE": "ON"
+        "DEVELOPER_MODE": "ON",
+        "VCPKG_MANIFEST_FEATURES": "test"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -178,7 +181,8 @@
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "DEVELOPER_MODE": "ON"
+        "DEVELOPER_MODE": "ON",
+        "VCPKG_MANIFEST_FEATURES": "test"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -243,7 +247,8 @@
         "CMAKE_C_COMPILER": "gcc-14",
         "CMAKE_CXX_COMPILER": "g++-14",
         "CMAKE_BUILD_TYPE": "Debug",
-        "DEVELOPER_MODE": "ON"
+        "DEVELOPER_MODE": "ON",
+        "VCPKG_MANIFEST_FEATURES": "test"
       }
     },
     {
@@ -255,7 +260,8 @@
         "CMAKE_C_COMPILER": "gcc-14",
         "CMAKE_CXX_COMPILER": "g++-14",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "DEVELOPER_MODE": "ON"
+        "DEVELOPER_MODE": "ON",
+        "VCPKG_MANIFEST_FEATURES": "test"
       }
     },
     {
@@ -267,7 +273,8 @@
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "Debug",
-        "DEVELOPER_MODE": "ON"
+        "DEVELOPER_MODE": "ON",
+        "VCPKG_MANIFEST_FEATURES": "test"
       }
     },
     {
@@ -280,7 +287,8 @@
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "description": "Target Unix-like OS with the clang compiler, release build type",
-        "DEVELOPER_MODE": "ON"
+        "DEVELOPER_MODE": "ON",
+        "VCPKG_MANIFEST_FEATURES": "test"
       }
     }
   ],
