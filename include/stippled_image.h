@@ -1,13 +1,13 @@
 #pragma once
 
-#include <numeric>
-#include <vector>
+#include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <concepts>
-#include <cassert>
-#include <algorithm>
-#include <iostream>
+#include <execution>
 #include <mdspan>
+#include <numeric>
+#include <vector>
 
 namespace brma
 {
@@ -66,13 +66,40 @@ namespace brma
             assert(n == mat.extent(1));
             backing.resize(n * n);
             std::mdspan const result(backing.data(), n, n);
-            // because mat and result have the same layout and are contiguous,
-            // the rotated copy is fast and simple.
-            size_t const offset = ((dx % n) * n + (dy % n)) % (backing.size());
-            float const* src = &mat[0, 0];
-            float* dst = backing.data();
-            std::copy_n(src + offset, backing.size() - offset, dst);
-            std::copy_n(src, offset, dst + (backing.size() - offset));
+            dx %= n;
+            dy %= n;
+
+            // make a vector of row indices [0,1,2,...,n-1]
+            std::vector<size_t> rows(n);
+            std::ranges::iota(rows, 0);
+
+            // Parallel for_each over rows
+            std::for_each(
+                std::execution::par,
+                rows.begin(), rows.end(),
+                [dx, dy, n, mat_data = &mat[0,0], result_data = backing.data()](size_t dst_row)
+                {
+                    // find the source row (wrapped)
+                    size_t const src_row = (dst_row + n - dx) % n;
+                    float const* src_row_data{ mat_data + (src_row * n) };
+
+                    // now shift columns: copy tail then head
+                    size_t const cut = n - dy;
+                    // tail -> head of result row
+                    std::memcpy(
+                        result_data + dst_row * n,
+                        src_row_data + cut,
+                        dy * sizeof(float)
+                    );
+                    // head -> remainder of result row
+                    std::memcpy(
+                        result_data + dst_row * n + dy,
+                        src_row_data,
+                        cut * sizeof(float)
+                    );
+                }
+            );
+
             return result;
         }
     }
@@ -105,9 +132,11 @@ namespace brma
             float content_bias = 0.5f,
             bool negate = false) -> data
         {
+            assert(input_img.extents().rank() == 2 && input_img.extent(0) == input_img.extent(1));
             data ret;
             ret.size = input_img.extent(0);
-            ret.backing.resize(input_img.extent(0), input_img.extent(0));
+            ret.backing.resize(input_img.extent(0) * input_img.extent(0));
+            ret.backing.assign(ret.backing.size(), negate ? 0 : 1);
             assert(input_img.extent(1) == ret.size && "input_img must be square");
 
             // ReSharper disable once CppInconsistentNaming
