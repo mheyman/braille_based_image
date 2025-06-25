@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <concepts>
 #include <cstdint>
 #include <fmt/format.h>
