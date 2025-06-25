@@ -1,5 +1,7 @@
+// ReSharper disable CppInconsistentNaming
 #define cimg_use_png
 #define cimg_use_lapack
+// ReSharper restore CppInconsistentNaming
 #include <CImg.h>
 #include <iostream>
 #include <vector>
@@ -40,7 +42,7 @@ namespace
 
     auto image() -> void
     {
-        constexpr int const image_size {256};
+        constexpr int image_size {256};
 
         // Load and convert to grayscale
         cimg_library::CImg<float> image("obama.png");
@@ -53,8 +55,8 @@ namespace
         {
             image = image.get_RGBtoYCbCr().get_channel(0); // Convert to grayscale
         }
-        image.resize(image_size, image_size);      // Resize with default cubic interpolation
-        image.blur(0.5f);                 // Slight sharpen with low blur
+        image.resize(image_size, image_size); // Resize with default cubic interpolation
+        image.blur(0.5f);  // sharpening makes the stippled image better
 
         // Normalize to [0, 1]
         float const image_min = image.min();
@@ -66,11 +68,10 @@ namespace
         std::ranges::copy(image, image_data.begin());
 
         // Wrap in mdspan
-        std::mdspan<float, std::extents<size_t, image_size, image_size>> image_mdspan(image_data.data());
+        std::mdspan<float, std::extents<size_t, image_size, image_size>> const image_mdspan(image_data.data());
 
         // Example access
-        std::cout << "Pixel at (0,0): " << image_mdspan[0, 0] << "\n";
-        brma::stippled_image stippled_image(image_mdspan, .5);
+        brma::stippled_image const stippled_image(image_mdspan, .5);
         std::cout << brma::mask_braille(stippled_image.stippled(), brma::border::line) << "\n";
     }
 }
@@ -79,7 +80,7 @@ namespace
 int main()
 {
 #ifdef _WIN32
-    (void)std::setlocale(LC_CTYPE, ".UTF8");
+    (void)std::setlocale(LC_CTYPE, ".UTF8");  // NOLINT(concurrency-mt-unsafe)
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 #endif
