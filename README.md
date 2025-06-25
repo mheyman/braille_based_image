@@ -3,61 +3,60 @@ Convert mdspan into braille-based image for viewing on console
 
 Like:
 ```c++
-    std::array<bool, 48> flat_mask = { {
-        true, true, false, false, true, true,
-        false, true, true, true, true, false,
-        false, false, true, true, false, false,
-        false, false, true, true, false, false,
-        false, false, true, true, false, false,
-        false, true, true, true, true, false,
-        true, true, false, false, true, true,
-        true, true, true, true, true, true,
-    } };
+std::array<bool, 48> flat_mask = { {
+	true, true, false, false, true, true,
+	false, true, true, true, true, false,
+	false, false, true, true, false, false,
+	false, false, true, true, false, false,
+	false, false, true, true, false, false,
+	false, true, true, true, true, false,
+	true, true, false, false, true, true,
+	true, true, true, true, true, true,
+} };
 
-    auto const mask = std::mdspan(flat_mask.data(), 8, 6);
-    std::cout << brma::mask_braille(mask, brma::border::line) << "\n";
-    std::cout << brma::mask_braille(mask) << "\n";
-    // ╭───╮
-    // │⠙⣶⠋│
-    // │⣴⣛⣦│
-    // ╰───╯
-    // ⠙⣶⠋
-    // ⣴⣛⣦
-
+auto const mask = std::mdspan(flat_mask.data(), 8, 6);
+std::cout << brma::mask_braille(mask, brma::border::line) << "\n";
+std::cout << brma::mask_braille(mask) << "\n";
+// ╭───╮
+// │⠙⣶⠋│
+// │⣴⣛⣦│
+// ╰───╯
+// ⠙⣶⠋
+// ⣴⣛⣦
 ```
 Or for images:
 ```c++
-        constexpr int image_size {256};
+constexpr int image_size {256};
 
-        // Load and convert to grayscale
-        cimg_library::CImg<float> image("obama.png");
-        if (image.is_empty())
-        {
-            std::cerr << "Failed to load image.\n";
-            return;
-        }
-        if (image.spectrum() == 3)
-        {
-            image = image.get_RGBtoYCbCr().get_channel(0); // Convert to grayscale
-        }
-        image.resize(image_size, image_size); // Resize with default cubic interpolation
-        image.blur(0.5f);  // sharpening makes the stippled image better
+// Load and convert to grayscale
+cimg_library::CImg<float> image("obama.png");
+if (image.is_empty())
+{
+	std::cerr << "Failed to load image.\n";
+	return;
+}
+if (image.spectrum() == 3)
+{
+	image = image.get_RGBtoYCbCr().get_channel(0); // Convert to grayscale
+}
+image.resize(image_size, image_size); // Resize with default cubic interpolation
+image.blur(0.5f);  // sharpening makes the stippled image better
 
-        // Normalize to [0, 1]
-        float const image_min = image.min();
-        float const image_max = image.max();
-        image = (image - image_min) / (image_max - image_min);
+// Normalize to [0, 1]
+float const image_min = image.min();
+float const image_max = image.max();
+image = (image - image_min) / (image_max - image_min);
 
-        // Flatten into std::vector<float>
-        std::vector<float> image_data(image.size());
-        std::ranges::copy(image, image_data.begin());
+// Flatten into std::vector<float>
+std::vector<float> image_data(image.size());
+std::ranges::copy(image, image_data.begin());
 
-        // Wrap in mdspan
-        std::mdspan<float, std::extents<size_t, image_size, image_size>> const image_mdspan(image_data.data());
+// Wrap in mdspan
+std::mdspan<float, std::extents<size_t, image_size, image_size>> const image_mdspan(image_data.data());
 
-        // Example access
-        brma::stippled_image const stippled_image(image_mdspan, .5);
-        std::cout << brma::mask_braille(stippled_image.stippled(), brma::border::line) << "\n";
+// Example access
+brma::stippled_image const stippled_image(image_mdspan, .5);
+std::cout << brma::mask_braille(stippled_image.stippled(), brma::border::line) << "\n";
 // ╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 // │⠽⣩⢫⢝⢭⡩⢝⠭⣓⢝⢜⠭⡱⡩⠭⡩⢝⢜⠭⡪⣑⠭⡪⡩⠭⣩⠪⡩⣑⠭⡱⡱⡩⣑⠭⡩⡝⡜⠭⢩⣊⠭⣑⢝⢜⠭⡪⡩⡩⢍⠭⡪⣒⡩⡑⡍⡍⡭⡣⣋⠭⡔⠦⣒⢔⢔⡒⢔⡢⣒⢔⠴⢒⢔⡔⡔⢔⡢⡢⣒⠔⡥⢒⡒⡔⠢⡒⡔⠔⣒⢔⠔⣔⠢⡒⡔⣒⢆⢖⢖⢕⣒⢪⡪⣒⢭⢚⢍⠭⡩⢝⢜⢩⡩⡕⡍⢎⢕⢍⠭⢍⡝⡝⡭⡫⡭⡫⣋│
 // │⣏⠮⣪⢎⠵⡪⡱⡩⡲⢕⣓⢕⡪⣊⡪⡪⡪⡕⣑⢕⢕⡩⢎⢎⢎⢖⢍⢪⢔⢝⡰⡪⡪⡢⡫⡪⣊⡜⡪⠕⣒⡪⠔⡕⡪⡪⣊⢲⢸⢱⢩⢪⣒⢎⢜⠬⡪⣪⢪⡲⡩⢪⢪⢒⡩⡪⡜⡕⡢⡕⢜⢜⠥⡣⠎⡎⣕⢪⠪⡢⡫⡜⣕⢜⢜⠵⡱⣊⠭⡪⠬⢍⡲⣩⢪⢊⢎⣒⡭⡪⣓⠮⠵⣒⢕⢕⠭⡒⡭⡪⢕⠭⡢⡪⢜⡪⡑⡕⣑⢪⠕⡜⡪⢪⠭⡲⡱⡣│
