@@ -118,9 +118,12 @@ namespace brma
             std::vector<std::tuple<size_t, size_t, float>> samples;
         } data_;
     public:
-        explicit stippled_image(float_2d_span auto input_img, float percentage = 0.33f, float sigma = 0.9f,
-                                float content_bias = 0.5f,
-                                bool negate = false) : data_{init_backing(input_img, percentage, sigma, content_bias, negate)}
+        explicit stippled_image(
+            float_2d_span auto input_img, 
+            float percentage = 0.33f,
+            float sigma = 0.9f,
+            float content_bias = 0.5f,
+            bool negate = false) : data_{init_backing(input_img, percentage, sigma, content_bias, negate)}
         {
         }
 
@@ -132,15 +135,20 @@ namespace brma
         /// @return The samples used to create the stippled image.
         [[nodiscard]] auto samples() const -> std::vector<std::tuple<size_t, size_t, float>> { return data_.samples; }
     private:
-        static auto init_backing(float_2d_span auto input_img, float percentage = 0.33f, float sigma = 0.9f,
-            float content_bias = 0.5f,
-            bool negate = false) -> data
+        static auto init_backing(
+            float_2d_span auto input_img, 
+            float percentage, 
+            float sigma,
+            float content_bias, 
+            bool negate) -> data
         {
             assert(input_img.extents().rank() == 2 && input_img.extent(0) == input_img.extent(1));
+            uint8_t const dot_value = negate ? 0u : 1u;
+            uint8_t const background_value = negate ? 1u : 0u;
             data ret;
             ret.size = input_img.extent(0);
             ret.backing.resize(input_img.extent(0) * input_img.extent(0));
-            ret.backing.assign(ret.backing.size(), negate ? 0 : 1);
+            ret.backing.assign(ret.backing.size(), background_value);
             assert(input_img.extent(1) == ret.size && "input_img must be square");
 
             // ReSharper disable once CppInconsistentNaming
@@ -194,7 +202,7 @@ namespace brma
 
                 ret.samples.emplace_back(std::tuple{ min_x, min_y, input_img[min_x, min_y] });
 
-                final_stipple[min_x, min_y] = negate ? 1 : 0;
+                final_stipple[min_x, min_y] = dot_value;
             }
 
             return ret;
