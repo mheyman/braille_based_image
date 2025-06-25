@@ -13,7 +13,7 @@ namespace brma
 {
     // --- Concept for 2D mdspan over float ---
     template<typename M>
-    concept Float2DSpan = requires(M m)
+    concept float_2d_span = requires(M m)
     {
         requires std::same_as<typename M::element_type, float>;
         requires M::rank() == 2;
@@ -51,9 +51,10 @@ namespace brma
         }
 
         // Energy shift by wrapping LUT
-        template <Float2DSpan T>
+        template <float_2d_span T>
         auto roll_2d(T const &mat, size_t dx, size_t dy, std::vector<float> &backing) -> std::mdspan<float, std::dextents<size_t, 2>>
         {
+            // assert layout_right
             static_assert(std::is_same_v<typename T::layout_type, std::layout_right>,
                 "mat must be row-major (std::layout_right)");
             // assert contiguous
@@ -64,6 +65,7 @@ namespace brma
 
             // assert square
             assert(n == mat.extent(1));
+
             backing.resize(n * n);
             std::mdspan const result(backing.data(), n, n);
             dx %= n;
@@ -87,13 +89,13 @@ namespace brma
                     size_t const cut = n - dy;
                     // tail -> head of result row
                     std::memcpy(
-                        result_data + dst_row * n,
+                        result_data + (dst_row * n),
                         src_row_data + cut,
                         dy * sizeof(float)
                     );
                     // head -> remainder of result row
                     std::memcpy(
-                        result_data + dst_row * n + dy,
+                        result_data + (dst_row * n) + dy,
                         src_row_data,
                         cut * sizeof(float)
                     );
@@ -107,6 +109,8 @@ namespace brma
 
     class stippled_image
     {
+        // based on code from https://bartwronski.com/2022/08/31/progressive-image-stippling-and-greedy-blue-noise-importance-sampling/
+        // thank you Bart Wronski
         struct data
         {
             size_t size;
@@ -114,21 +118,21 @@ namespace brma
             std::vector<std::tuple<size_t, size_t, float>> samples;
         } data_;
     public:
-        stippled_image(Float2DSpan auto input_img, float percentage = 0.33f, float sigma = 0.9f,
-            float content_bias = 0.5f,
-            bool negate = false) : data_{init_backing(input_img, percentage, sigma, content_bias, negate)}
+        explicit stippled_image(float_2d_span auto input_img, float percentage = 0.33f, float sigma = 0.9f,
+                                float content_bias = 0.5f,
+                                bool negate = false) : data_{init_backing(input_img, percentage, sigma, content_bias, negate)}
         {
         }
 
         /// @brief Gets the stippled image.
         /// @return The stippled image.
-        auto stippled() const -> std::mdspan<bool const, std::dextents<size_t, 2>> { return std::mdspan{ reinterpret_cast<bool const*>(data_.backing.data()), data_.size, data_.size }; }
+        [[nodiscard]] auto stippled() const -> std::mdspan<bool const, std::dextents<size_t, 2>> { return std::mdspan{ reinterpret_cast<bool const*>(data_.backing.data()), data_.size, data_.size }; }
 
         /// @brief Gets the samples used to create the stippled image.
         /// @return The samples used to create the stippled image.
-        auto samples() const -> std::vector<std::tuple<size_t, size_t, float>> { return data_.samples; }
+        [[nodiscard]] auto samples() const -> std::vector<std::tuple<size_t, size_t, float>> { return data_.samples; }
     private:
-        static auto init_backing(Float2DSpan auto input_img, float percentage = 0.33f, float sigma = 0.9f,
+        static auto init_backing(float_2d_span auto input_img, float percentage = 0.33f, float sigma = 0.9f,
             float content_bias = 0.5f,
             bool negate = false) -> data
         {
@@ -184,7 +188,7 @@ namespace brma
                 size_t min_y = static_cast<size_t>(pos % energy_currents.extent(0));
 
                 // Update energy with rolled LUT
-                std::mdspan<float, std::dextents<size_t, 2>> rolled{ detail::roll_2d(luts, min_x, min_y, rolled_backing) };
+                (void)detail::roll_2d(luts, min_x, min_y, rolled_backing);
                 std::transform(energy_currents_backing.begin(), energy_currents_backing.end(), rolled_backing.begin(), energy_currents_backing.begin(),
                     [](float a, float b) { return a + b; });
 
